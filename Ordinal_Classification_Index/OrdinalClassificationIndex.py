@@ -37,43 +37,42 @@ def add_offset(n, error):
 def OrdinalClassificationIndex(cMatrix):
     '''
     Calculate the Ordinal Classification Index from the confusion matrix
-    
+   
     Input: confusion matrix as produced by sklearn.metrics.confusion_matrix
-    
+   
     Output: an Ordinal Classification Index score
-    
+   
     '''
     K = len(cMatrix)
     N = np.sum(cMatrix)
 
-    ggamma=1
-
-    bbeta=0.75 / (N * ((K - 1) ** ggamma))
+    ggamma = 1
+    bbeta = 0.75 / (N * ((K - 1) ** ggamma))
     helperM2 = np.zeros([K,K])
     errMatrix = np.zeros([K,K])
-    for r in range(K):
-        for c in  range(K):
-            helperM2[r,c]=  cMatrix[r,c] * ((abs(r - c)) ** ggamma)
     
+    for r in range(K):
+        for c in range(K):
+            helperM2[r,c] = cMatrix[r,c] * ((abs(r - c)) ** ggamma)
+   
     TotalDispersion = (np.sum(helperM2)) ** (1 / ggamma)
     helperM1 = cMatrix / (TotalDispersion + N)
     errMatrix[0,0] = 1 - helperM1[0,0] +  (bbeta * helperM2[0,0])
-    for r in  range(1,K-1):
-        c=1
-        errMatrix[r,c] = errMatrix[r - 1,c] - helperM1[r,c] +  (bbeta * helperM2[r,c])
     
-    for c in  range(1, K-1):
-        r=1
-        errMatrix[r,c] = errMatrix[r,c - 1] - helperM1[r,c] +  (bbeta * helperM2[r,c])
-    
-    for c in  range(1,K-1):
-        for r in  range(1,K-1):
+    for r in range(1, K):
+        errMatrix[r,0] = errMatrix[r - 1,0] - helperM1[r,0] +  (bbeta * helperM2[r,0])
+   
+    for c in range(1, K):
+        errMatrix[0,c] = errMatrix[0,c - 1] - helperM1[0,c] +  (bbeta * helperM2[0,c])
+   
+    for r in range(1, K):
+        for c in range(1, K):
             costup = errMatrix[r - 1,c]
             costleft = errMatrix[r,c - 1]
             lefttopcost = errMatrix[r - 1,c - 1]
-            aux = min(costup,costleft,lefttopcost)
-            errMatrix[r,c]= aux - helperM1[r,c] +  (bbeta * helperM2[r,c])
-    
+            aux = min(costup, costleft, lefttopcost)
+            errMatrix[r,c] = aux - helperM1[r,c] +  (bbeta * helperM2[r,c])
+   
     oc = errMatrix[-1,-1]
     return oc
 
@@ -92,6 +91,5 @@ if __name__ == '__main__':
     conf_2 = confusion_matrix(y_true, y_pred_2)
     conf_3 = confusion_matrix(y_true, y_pred_3)
     
-    #The code is obviously broken because it returns 0.0 no matter what.
     OrdinalClassificationIndex(conf_2)
     OrdinalClassificationIndex(conf_3) 
